@@ -1,30 +1,30 @@
 #include "LVGL_Driver.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_timer.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include "ST7789.h"
+
+#define EXAMPLE_LVGL_TICK_PERIOD_MS    2
+
 static const char *TAG_LVGL = "WS_LVGL";
 
-static lv_color_t buf1[ LVGL_BUF_LEN ];
-static lv_color_t buf2[ LVGL_BUF_LEN];
-// static lv_color_t* buf1 = (lv_color_t*) heap_caps_malloc(LVGL_BUF_LEN , MALLOC_CAP_SPIRAM);
-// static lv_color_t* buf2 = (lv_color_t*) heap_caps_malloc(LVGL_BUF_LEN , MALLOC_CAP_SPIRAM);
-    
+static lv_color_t buf1[LVGL_BUF_LEN];
+static lv_color_t buf2[LVGL_BUF_LEN];    
 
-lv_disp_draw_buf_t disp_buf;                                                 // contains internal graphic buffer(s) called draw buffer(s)
-lv_disp_drv_t disp_drv;                                                      // contains callback functions
-    
-void example_increase_lvgl_tick(void *arg)
+static lv_disp_draw_buf_t disp_buf;
+static lv_disp_t *disp;
+lv_disp_drv_t disp_drv;
+
+static void example_increase_lvgl_tick(void *arg)
 {
     /* Tell LVGL how many milliseconds has elapsed */
     lv_tick_inc(EXAMPLE_LVGL_TICK_PERIOD_MS);
 }
 
-bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
-{
-    lv_disp_drv_t *disp_driver = (lv_disp_drv_t *)user_ctx;
-    lv_disp_flush_ready(disp_driver);
-    return false;
-}
-
-void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
+static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
     int offsetx1 = area->x1;
@@ -36,7 +36,7 @@ void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t
 }
 
 /* Rotate display and touch, when rotated screen in LVGL. Called when driver parameters are updated. */
-void example_lvgl_port_update_callback(lv_disp_drv_t *drv)
+static void example_lvgl_port_update_callback(lv_disp_drv_t *drv)
 {
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
 
@@ -65,7 +65,14 @@ void example_lvgl_port_update_callback(lv_disp_drv_t *drv)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-lv_disp_t *disp;
+
+bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
+{
+    lv_disp_drv_t *disp_driver = (lv_disp_drv_t *)user_ctx;
+    lv_disp_flush_ready(disp_driver);
+    return false;
+}
+
 void LVGL_Init(void)
 {
     ESP_LOGI(TAG_LVGL, "Initialize LVGL library");
