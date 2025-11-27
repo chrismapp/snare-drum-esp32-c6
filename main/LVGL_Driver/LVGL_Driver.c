@@ -78,23 +78,23 @@ void LVGL_Init(void)
     ESP_LOGI(TAG_LVGL, "Initialize LVGL library");
     lv_init();
     
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUF_LEN );                              // initialize LVGL draw buffers
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LVGL_BUF_LEN );
 
     ESP_LOGI(TAG_LVGL, "Register display driver to LVGL");
-    lv_disp_drv_init(&disp_drv);                                                                        // Create a new screen object and initialize the associated device
+    lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = EXAMPLE_LCD_H_RES;             
-    disp_drv.ver_res = EXAMPLE_LCD_V_RES;                                                     // Horizontal pixel count
-    // disp_drv.rotated = LV_DISP_ROT_90; // 图像旋转                                                            // Vertical axis pixel count
-    disp_drv.flush_cb = example_lvgl_flush_cb;                                                          // Function : copy a buffer's content to a specific area of the display
-    disp_drv.drv_update_cb = example_lvgl_port_update_callback;                                         // Function : Rotate display and touch, when rotated screen in LVGL. Called when driver parameters are updated. 
-    disp_drv.draw_buf = &disp_buf;                                                                      // LVGL will use this buffer(s) to draw the screens contents
+    disp_drv.ver_res = EXAMPLE_LCD_V_RES;
+
+    disp_drv.flush_cb = example_lvgl_flush_cb;
+    disp_drv.drv_update_cb = example_lvgl_port_update_callback;
+    disp_drv.draw_buf = &disp_buf;
     disp_drv.user_data = panel_handle;                
-    ESP_LOGI(TAG_LVGL,"Register display indev to LVGL");                                                  // Custom display driver user data
-    disp = lv_disp_drv_register(&disp_drv);                                                  // Create screen objects
+    ESP_LOGI(TAG_LVGL,"Register display indev to LVGL");
+    disp = lv_disp_drv_register(&disp_drv);
     
-    /********************* LVGL *********************/
+
     ESP_LOGI(TAG_LVGL, "Install LVGL tick timer");
-    // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
+
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &example_increase_lvgl_tick,
         .name = "lvgl_tick"
